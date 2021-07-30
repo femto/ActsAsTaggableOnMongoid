@@ -115,10 +115,10 @@ WARNING
 end
 
 ActiveSupport.on_load(:mongoid) do
-  extend ActsAsTaggableOn::Taggable
-  include ActsAsTaggableOn::Tagger
+  include ActsAsTaggableOnMongoid::Taggable
+  include ActsAsTaggableOnMongoid::Tagger
 end
 ActiveSupport.on_load(:action_view) do
-  include ActsAsTaggableOn::TagsHelper
+  include ActsAsTaggableOnMongoid::TagsHelper
 end
 
