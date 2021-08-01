@@ -22,7 +22,7 @@ module ActsAsTaggableOnMongoid::Taggable
           tag_type = tags_type.to_s.singularize
           context_taggings = "#{tag_type}_taggings".to_sym
           context_tags = tags_type.to_sym
-          taggings_order = (preserve_tag_order? ? "#{ActsAsTaggableOnMongoid::Tagging.table_name}.id" : [])
+          taggings_order = (preserve_tag_order? ? "#{ActsAsTaggableOnMongoid::Tagging.collection_name}.id" : [])
 
           class_eval do
             # when preserving tag order, include order option so that for a 'tags' context
@@ -40,13 +40,14 @@ module ActsAsTaggableOnMongoid::Taggable
             #          source: :tag
 
 
-            define_method "#{tags_type.singularize}_list" do
-              taggings = send(context_taggings)
-            end
-            define_method "#{tags_type.singularize}_list=" do |arg|
-              result=arg.map do |x|x.split(",") end
-              send("#{context_taggings}=",result)
-            end
+            # define_method "#{tags_type.singularize}_list" do
+            #   taggings = send(context_taggings)
+            # end
+            # define_method "#{tags_type.singularize}_list=" do |arg|
+            #   result=arg.map do |x|x.split(",") end
+            #   send("#{context_taggings}=",result)
+            # end
+            #attr_accessor "#{tags_type.singularize}_list"
           end
 
           taggable_mixin.class_eval <<-RUBY, __FILE__, __LINE__ + 1
@@ -55,7 +56,7 @@ module ActsAsTaggableOnMongoid::Taggable
             end
 
             def #{tag_type}_list=(new_tags)
-              parsed_new_list = ActsAsTaggableOn.default_parser.new(new_tags).parse
+              parsed_new_list = ActsAsTaggableOnMongoid.default_parser.new(new_tags).parse
 
               if self.class.preserve_tag_order? || (parsed_new_list.sort != #{tag_type}_list.sort)
                 if ActsAsTaggableOnMongoid::Utils.legacy_activerecord?
@@ -90,7 +91,7 @@ module ActsAsTaggableOnMongoid::Taggable
 
       # all column names are necessary for PostgreSQL group clause
       def grouped_column_names_for(object)
-        object.column_names.map { |column| "#{object.table_name}.#{column}" }.join(', ')
+        object.column_names.map { |column| "#{object.collection_name}.#{column}" }.join(', ')
       end
 
       ##
@@ -163,7 +164,7 @@ module ActsAsTaggableOnMongoid::Taggable
       if instance_variable_get(variable_name)
         instance_variable_get(variable_name)
       elsif cached_tag_list_on(context) && ensure_included_cache_methods! && self.class.caching_tag_list_on?(context)
-        instance_variable_set(variable_name, ActsAsTaggableOn.default_parser.new(cached_tag_list_on(context)).parse)
+        instance_variable_set(variable_name, ActsAsTaggableOnMongoid.default_parser.new(cached_tag_list_on(context)).parse)
       else
         instance_variable_set(variable_name, ActsAsTaggableOnMongoid::TagList.new(tags_on(context).map(&:name)))
       end
@@ -184,26 +185,26 @@ module ActsAsTaggableOnMongoid::Taggable
     ##
     # Returns all tags of a given context
     def all_tags_on(context)
-      tagging_table_name = ActsAsTaggableOnMongoid::Tagging.table_name
+      tagging.collection_name = ActsAsTaggableOnMongoid::Tagging.collection_name
 
-      opts = ["#{tagging_table_name}.context = ?", context.to_s]
+      opts = ["#{tagging.collection_name}.context = ?", context.to_s]
       scope = base_tags.where(opts)
 
       if ActsAsTaggableOnMongoid::Utils.using_postgresql?
         group_columns = grouped_column_names_for(ActsAsTaggableOnMongoid::Tag)
-        scope.order(Arel.sql("max(#{tagging_table_name}.created_at)")).group(group_columns)
+        scope.order(Arel.sql("max(#{tagging.collection_name}.created_at)")).group(group_columns)
       else
-        scope.group("#{ActsAsTaggableOnMongoid::Tag.table_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key}")
+        scope.group("#{ActsAsTaggableOnMongoid::Tag.collection_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key}")
       end.to_a
     end
 
     ##
     # Returns all tags that are not owned of a given context
     def tags_on(context)
-      scope = base_tags.where(["#{ActsAsTaggableOnMongoid::Tagging.table_name}.context = ? AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.tagger_id IS NULL", context.to_s])
+      scope = base_tags.where(["#{ActsAsTaggableOnMongoid::Tagging.collection_name}.context = ? AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.tagger_id IS NULL", context.to_s])
       # when preserving tag order, return tags in created order
       # if we added the order to the association this would always apply
-      scope = scope.order("#{ActsAsTaggableOnMongoid::Tagging.table_name}.id") if self.class.preserve_tag_order?
+      scope = scope.order("#{ActsAsTaggableOnMongoid::Tagging.collection_name}.id") if self.class.preserve_tag_order?
       scope
     end
 

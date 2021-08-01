@@ -8,7 +8,8 @@ module ActsAsTaggableOnMongoid
     field :name, type: String
     field :taggings_count, type: Integer
 
-    #self.table_name = ActsAsTaggableOnMongoid.tags_table
+    #self.collection_name = ActsAsTaggableOnMongoid.tags_table
+    store_in collection:ActsAsTaggableOnMongoid.tags_table
 
     ### ASSOCIATIONS:
 

@@ -37,13 +37,13 @@ module ActsAsTaggableOnMongoid::Taggable
 
     def matching_contexts_for(search_context, result_context, klass, options = {})
       tags_to_find = tags_on(search_context).map { |t| t.name }
-      related_where(klass, ["#{exclude_self(klass, id)} #{klass.table_name}.#{klass.primary_key} = #{ActsAsTaggableOnMongoid::Tagging.table_name}.taggable_id AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.taggable_type = '#{klass.base_class}' AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.tag_id = #{ActsAsTaggableOnMongoid::Tag.table_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key} AND #{ActsAsTaggableOnMongoid::Tag.table_name}.name IN (?) AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.context = ?", tags_to_find, result_context])
+      related_where(klass, ["#{exclude_self(klass, id)} #{klass.collection_name}.#{klass.primary_key} = #{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_id AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_type = '#{klass.base_class}' AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id = #{ActsAsTaggableOnMongoid::Tag.collection_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key} AND #{ActsAsTaggableOnMongoid::Tag.collection_name}.name IN (?) AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.context = ?", tags_to_find, result_context])
     end
 
     def related_tags_for(context, klass, options = {})
       tags_to_ignore = Array.wrap(options[:ignore]).map(&:to_s) || []
       tags_to_find = tags_on(context).map { |t| t.name }.reject { |t| tags_to_ignore.include? t }
-      related_where(klass, ["#{exclude_self(klass, id)} #{klass.table_name}.#{klass.primary_key} = #{ActsAsTaggableOnMongoid::Tagging.table_name}.taggable_id AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.taggable_type = '#{klass.base_class}' AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.tag_id = #{ActsAsTaggableOnMongoid::Tag.table_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key} AND #{ActsAsTaggableOnMongoid::Tag.table_name}.name IN (?) AND #{ActsAsTaggableOnMongoid::Tagging.table_name}.context = ?", tags_to_find, context])
+      related_where(klass, ["#{exclude_self(klass, id)} #{klass.collection_name}.#{klass.primary_key} = #{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_id AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_type = '#{klass.base_class}' AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id = #{ActsAsTaggableOnMongoid::Tag.collection_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key} AND #{ActsAsTaggableOnMongoid::Tag.collection_name}.name IN (?) AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.context = ?", tags_to_find, context])
     end
 
     private
@@ -56,13 +56,13 @@ module ActsAsTaggableOnMongoid::Taggable
       if ActsAsTaggableOnMongoid::Utils.using_postgresql?
         grouped_column_names_for(klass)
       else
-        "#{klass.table_name}.#{klass.primary_key}"
+        "#{klass.collection_name}.#{klass.primary_key}"
       end
     end
 
     def related_where(klass, conditions)
-      klass.select("#{klass.table_name}.*, COUNT(#{ActsAsTaggableOnMongoid::Tag.table_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key}) AS count")
-      .from("#{klass.table_name}, #{ActsAsTaggableOnMongoid::Tag.table_name}, #{ActsAsTaggableOnMongoid::Tagging.table_name}")
+      klass.select("#{klass.collection_name}.*, COUNT(#{ActsAsTaggableOnMongoid::Tag.collection_name}.#{ActsAsTaggableOnMongoid::Tag.primary_key}) AS count")
+      .from("#{klass.collection_name}, #{ActsAsTaggableOnMongoid::Tag.collection_name}, #{ActsAsTaggableOnMongoid::Tagging.collection_name}")
       .group(group_columns(klass))
       .order('count DESC')
       .where(conditions)

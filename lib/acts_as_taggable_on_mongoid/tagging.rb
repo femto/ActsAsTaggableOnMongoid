@@ -2,9 +2,12 @@ module ActsAsTaggableOnMongoid
   class Tagging  #:nodoc:
     include Mongoid::Document
     include Mongoid::Timestamps
-    #self.table_name = ActsAsTaggableOnMongoid.taggings_table
+    #self.collection_name = ActsAsTaggableOnMongoid.taggings_table
+    store_in collection:ActsAsTaggableOnMongoid.taggings_table
 
-    field :tag_id, type: Integer
+    belongs_to :tag
+
+    field tag_name, type: String
     belongs_to :taggable, polymorphic: true
     belongs_to :tagger, polymorphic: true
     field :context, type: String

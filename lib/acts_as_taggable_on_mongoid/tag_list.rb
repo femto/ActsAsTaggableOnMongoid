@@ -7,7 +7,7 @@ module ActsAsTaggableOnMongoid
     attr_accessor :parser
 
     def initialize(*args)
-      @parser = ActsAsTaggableOn.default_parser
+      @parser = ActsAsTaggableOnMongoid.default_parser
       add(*args)
     end
 
@@ -82,10 +82,10 @@ module ActsAsTaggableOnMongoid
       reject!(&:blank?)
       map!(&:to_s)
       map!(&:strip)
-      map! { |tag| tag.mb_chars.downcase.to_s } if ActsAsTaggableOn.force_lowercase
-      map!(&:parameterize) if ActsAsTaggableOn.force_parameterize
+      map! { |tag| tag.mb_chars.downcase.to_s } if ActsAsTaggableOnMongoid.force_lowercase
+      map!(&:parameterize) if ActsAsTaggableOnMongoid.force_parameterize
 
-      ActsAsTaggableOn.strict_case_match ? uniq! : uniq!{ |tag| tag.downcase }
+      ActsAsTaggableOnMongoid.strict_case_match ? uniq! : uniq!{ |tag| tag.downcase }
       self
     end
 

@@ -13,3 +13,11 @@ gemspec
 
 # To use a debugger
 # gem 'byebug', group: [:development, :test]
+group :local_development do
+  gem 'guard'
+  gem 'guard-rspec'
+  gem 'appraisal'
+  gem 'rake'
+  gem 'sqlite3'
+  gem 'byebug', platforms: [:mri]
+end
