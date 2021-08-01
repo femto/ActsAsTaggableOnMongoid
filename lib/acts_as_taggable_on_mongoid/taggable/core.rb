@@ -201,10 +201,11 @@ module ActsAsTaggableOnMongoid::Taggable
     ##
     # Returns all tags that are not owned of a given context
     def tags_on(context)
-      scope = base_tags.where(["#{ActsAsTaggableOnMongoid::Tagging.collection_name}.context = ? AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.tagger_id IS NULL", context.to_s])
+      scope = taggings.where(context:context,tagger_id:nil);
       # when preserving tag order, return tags in created order
       # if we added the order to the association this would always apply
-      scope = scope.order("#{ActsAsTaggableOnMongoid::Tagging.collection_name}.id") if self.class.preserve_tag_order?
+      scope = scope.order(:id) if self.class.preserve_tag_order?
+      #scope = scope.to_a
       scope
     end
 

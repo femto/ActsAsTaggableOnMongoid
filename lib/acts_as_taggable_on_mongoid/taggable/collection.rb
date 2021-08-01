@@ -60,17 +60,17 @@ module ActsAsTaggableOnMongoid::Taggable
         options[:conditions] = sanitize_sql(options[:conditions]) if options[:conditions]
 
         ## Generate scope:
-        tagging_scope = ActsAsTaggableOnMongoid::Tagging.select("#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id")
-        tag_scope = ActsAsTaggableOnMongoid::Tag.select("#{ActsAsTaggableOnMongoid::Tag.collection_name}.*").order(options[:order]).limit(options[:limit])
+        tagging_scope = ActsAsTaggableOn::Tagging.select("#{ActsAsTaggableOn::Tagging.collection_name}.tag_id")
+        tag_scope = ActsAsTaggableOn::Tag.select("#{ActsAsTaggableOn::Tag.collection_name}.*").order(options[:order]).limit(options[:limit])
 
         # Joins and conditions
         tagging_conditions(options).each { |condition| tagging_scope = tagging_scope.where(condition) }
         tag_scope = tag_scope.where(options[:conditions])
 
-        group_columns = "#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id"
+        group_columns = "#{ActsAsTaggableOn::Tagging.collection_name}.tag_id"
 
         # Append the current scope to the scope, because we can't use scope(:find) in RoR 3.0 anymore:
-        tagging_scope = generate_tagging_scope_in_clause(tagging_scope,.collection_name, primary_key).group(group_columns)
+        tagging_scope = generate_tagging_scope_in_clause(tagging_scope, collection_name, primary_key).group(group_columns)
 
         tag_scope_joins(tag_scope, tagging_scope)
       end
@@ -95,13 +95,13 @@ module ActsAsTaggableOnMongoid::Taggable
         options[:conditions] = sanitize_sql(options[:conditions]) if options[:conditions]
 
         ## Generate scope:
-        tagging_scope = ActsAsTaggableOnMongoid::Tagging.select("#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id, COUNT(#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id) AS tags_count")
-        tag_scope = ActsAsTaggableOnMongoid::Tag.select("#{ActsAsTaggableOnMongoid::Tag.collection_name}.*, #{ActsAsTaggableOnMongoid::Tagging.collection_name}.tags_count AS count").order(options[:order]).limit(options[:limit])
+        tagging_scope = ActsAsTaggableOn::Tagging.select("#{ActsAsTaggableOn::Tagging.collection_name}.tag_id, COUNT(#{ActsAsTaggableOn::Tagging.collection_name}.tag_id) AS tags_count")
+        tag_scope = ActsAsTaggableOn::Tag.select("#{ActsAsTaggableOn::Tag.collection_name}.*, #{ActsAsTaggableOn::Tagging.collection_name}.tags_count AS count").order(options[:order]).limit(options[:limit])
 
         # Current model is STI descendant, so add type checking to the join condition
         unless descends_from_active_record?
-          taggable_join = "INNER JOIN #.collection_name} ON #.collection_name}.#{primary_key} = #{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_id"
-          taggable_join << " AND #.collection_name}.#{inheritance_column} = '#{name}'"
+          taggable_join = "INNER JOIN #{collection_name} ON #{collection_name}.#{primary_key} = #{ActsAsTaggableOn::Tagging.collection_name}.taggable_id"
+          taggable_join << " AND #{collection_name}.#{inheritance_column} = '#{name}'"
           tagging_scope = tagging_scope.joins(taggable_join)
         end
 
@@ -110,16 +110,16 @@ module ActsAsTaggableOnMongoid::Taggable
         tag_scope = tag_scope.where(options[:conditions])
 
         # GROUP BY and HAVING clauses:
-        having = ["COUNT(#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id) > 0"]
-        having.push sanitize_sql(["COUNT(#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id) >= ?", options.delete(:at_least)]) if options[:at_least]
-        having.push sanitize_sql(["COUNT(#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id) <= ?", options.delete(:at_most)]) if options[:at_most]
+        having = ["COUNT(#{ActsAsTaggableOn::Tagging.collection_name}.tag_id) > 0"]
+        having.push sanitize_sql(["COUNT(#{ActsAsTaggableOn::Tagging.collection_name}.tag_id) >= ?", options.delete(:at_least)]) if options[:at_least]
+        having.push sanitize_sql(["COUNT(#{ActsAsTaggableOn::Tagging.collection_name}.tag_id) <= ?", options.delete(:at_most)]) if options[:at_most]
         having = having.compact.join(' AND ')
 
-        group_columns = "#{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id"
+        group_columns = "#{ActsAsTaggableOn::Tagging.collection_name}.tag_id"
 
         unless options[:id]
           # Append the current scope to the scope, because we can't use scope(:find) in RoR 3.0 anymore:
-          tagging_scope = generate_tagging_scope_in_clause(tagging_scope,.collection_name, primary_key)
+          tagging_scope = generate_tagging_scope_in_clause(tagging_scope, collection_name, primary_key)
         end
 
         tagging_scope = tagging_scope.group(group_columns).having(having)
@@ -133,14 +133,14 @@ module ActsAsTaggableOnMongoid::Taggable
 
       private
 
-      def generate_tagging_scope_in_clause(tagging_scope,.collection_name, primary_key)
-       .collection_name_pkey = "#.collection_name}.#{primary_key}"
-        if ActsAsTaggableOnMongoid::Utils.using_mysql?
+      def generate_tagging_scope_in_clause(tagging_scope, collection_name, primary_key)
+        collection_name_pkey = "#{collection_name}.#{primary_key}"
+        if ActsAsTaggableOn::Utils.using_mysql?
           # See https://github.com/mbleigh/acts-as-taggable-on/pull/457 for details
-          scoped_ids = pluck.collection_name_pkey)
-          tagging_scope = tagging_scope.where("#{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_id IN (?)", scoped_ids)
+          scoped_ids = pluck(collection_name_pkey)
+          tagging_scope = tagging_scope.where("#{ActsAsTaggableOn::Tagging.collection_name}.taggable_id IN (?)", scoped_ids)
         else
-          tagging_scope = tagging_scope.where("#{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_id IN(#{safe_to_sql(except(:select).select.collection_name_pkey))})")
+          tagging_scope = tagging_scope.where("#{ActsAsTaggableOn::Tagging.collection_name}.taggable_id IN(#{safe_to_sql(except(:select).select(collection_name_pkey))})")
         end
 
         tagging_scope
@@ -148,12 +148,12 @@ module ActsAsTaggableOnMongoid::Taggable
 
       def tagging_conditions(options)
         tagging_conditions = []
-        tagging_conditions.push sanitize_sql(["#{ActsAsTaggableOnMongoid::Tagging.collection_name}.created_at <= ?", options.delete(:end_at)]) if options[:end_at]
-        tagging_conditions.push sanitize_sql(["#{ActsAsTaggableOnMongoid::Tagging.collection_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
+        tagging_conditions.push sanitize_sql(["#{ActsAsTaggableOn::Tagging.collection_name}.created_at <= ?", options.delete(:end_at)]) if options[:end_at]
+        tagging_conditions.push sanitize_sql(["#{ActsAsTaggableOn::Tagging.collection_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
 
-        taggable_conditions = sanitize_sql(["#{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_type = ?", base_class.name])
-        taggable_conditions << sanitize_sql([" AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.context = ?", options.delete(:on).to_s]) if options[:on]
-        taggable_conditions << sanitize_sql([" AND #{ActsAsTaggableOnMongoid::Tagging.collection_name}.taggable_id = ?", options[:id]]) if options[:id]
+        taggable_conditions = sanitize_sql(["#{ActsAsTaggableOn::Tagging.collection_name}.taggable_type = ?", base_class.name])
+        taggable_conditions << sanitize_sql([" AND #{ActsAsTaggableOn::Tagging.collection_name}.context = ?", options.delete(:on).to_s]) if options[:on]
+        taggable_conditions << sanitize_sql([" AND #{ActsAsTaggableOn::Tagging.collection_name}.taggable_id = ?", options[:id]]) if options[:id]
 
         tagging_conditions.push taggable_conditions
 
@@ -161,7 +161,7 @@ module ActsAsTaggableOnMongoid::Taggable
       end
 
       def tag_scope_joins(tag_scope, tagging_scope)
-        tag_scope = tag_scope.joins("JOIN (#{safe_to_sql(tagging_scope)}) AS #{ActsAsTaggableOnMongoid::Tagging.collection_name} ON #{ActsAsTaggableOnMongoid::Tagging.collection_name}.tag_id = #{ActsAsTaggableOnMongoid::Tag.collection_name}.id")
+        tag_scope = tag_scope.joins("JOIN (#{safe_to_sql(tagging_scope)}) AS #{ActsAsTaggableOn::Tagging.collection_name} ON #{ActsAsTaggableOn::Tagging.collection_name}.tag_id = #{ActsAsTaggableOn::Tag.collection_name}.id")
         tag_scope.extending(CalculationMethods)
       end
     end
