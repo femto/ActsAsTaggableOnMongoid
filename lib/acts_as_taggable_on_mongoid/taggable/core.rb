@@ -59,13 +59,13 @@ module ActsAsTaggableOnMongoid::Taggable
               parsed_new_list = ActsAsTaggableOnMongoid.default_parser.new(new_tags).parse
 
               if self.class.preserve_tag_order? || (parsed_new_list.sort != #{tag_type}_list.sort)
-                if ActsAsTaggableOnMongoid::Utils.legacy_activerecord?
-                  set_attribute_was("#{tag_type}_list", #{tag_type}_list)
-                else
-                  unless #{tag_type}_list_changed?
-                    @attributes["#{tag_type}_list"] = ActiveModel::Attribute.from_user("#{tag_type}_list", #{tag_type}_list, ActsAsTaggableOnMongoid::Taggable::TagListType.new)
-                  end
-                end
+                # if ActsAsTaggableOnMongoid::Utils.legacy_activerecord?
+                #   set_attribute_was("#{tag_type}_list", #{tag_type}_list)
+                # else
+                #   unless #{tag_type}_list_changed?
+                #     @attributes["#{tag_type}_list"] = ActiveModel::Attribute.from_user("#{tag_type}_list", #{tag_type}_list, ActsAsTaggableOnMongoid::Taggable::TagListType.new)
+                #   end
+                # end
                 write_attribute("#{tag_type}_list", parsed_new_list)
               end
 
@@ -78,7 +78,9 @@ module ActsAsTaggableOnMongoid::Taggable
 
             private
             def dirtify_tag_list(tagging)
-              attribute_will_change! tagging.context.singularize+"_list"
+              #puts "dirtify_tag_list " + tagging
+              #attribute_will_change! tagging.context.singularize+"_list"
+              raise "dirtify_tag_list " + tagging
             end
           RUBY
         end
@@ -214,7 +216,7 @@ module ActsAsTaggableOnMongoid::Taggable
 
       variable_name = "@#{context.to_s.singularize}_list"
 
-      parsed_new_list = ActsAsTaggableOn.default_parser.new(new_list).parse
+      parsed_new_list = ActsAsTaggableOnMongoid.default_parser.new(new_list).parse
 
       instance_variable_set(variable_name, parsed_new_list)
     end

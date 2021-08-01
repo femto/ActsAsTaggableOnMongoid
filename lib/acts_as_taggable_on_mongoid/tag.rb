@@ -14,6 +14,7 @@ module ActsAsTaggableOnMongoid
     ### ASSOCIATIONS:
 
     has_many :taggings, dependent: :destroy, class_name: '::ActsAsTaggableOnMongoid::Tagging'
+    index({ name: 1 }, { unique: true, name: "index_tags_on_name" })
 
     ### VALIDATIONS:
 
@@ -31,7 +32,7 @@ module ActsAsTaggableOnMongoid
     scope :least_used, ->(limit = 20) { order('taggings_count asc').limit(limit) }
 
     def self.named(name)
-      if ActsAsTaggableOn.strict_case_match
+      if ActsAsTaggableOnMongoid.strict_case_match
         where(["name = #{binary}?", as_8bit_ascii(name)])
       else
         where(['LOWER(name) = LOWER(?)', as_8bit_ascii(unicode_downcase(name))])
@@ -39,10 +40,19 @@ module ActsAsTaggableOnMongoid
     end
 
     def self.named_any(list)
-      clause = list.map { |tag|
-        sanitize_sql_for_named_any(tag).force_encoding('BINARY')
-      }.join(' OR ')
-      where(clause)
+      # clause = list.map { |tag|
+      #   sanitize_sql_for_named_any(tag).force_encoding('BINARY')
+      # }.join(' OR ')
+      # where(clause)
+
+      list.inject(self) do |sum, tag|
+        if ActsAsTaggableOnMongoid.strict_case_match
+          sum.or(name:tag)
+        else
+          sum.or(name:unicode_downcase(tag))
+        end
+
+      end
     end
 
     def self.named_like(name)
@@ -122,7 +132,7 @@ module ActsAsTaggableOnMongoid
       private
 
       def comparable_name(str)
-        if ActsAsTaggableOn.strict_case_match
+        if ActsAsTaggableOnMongoid.strict_case_match
           str
         else
           unicode_downcase(str.to_s)
@@ -142,7 +152,7 @@ module ActsAsTaggableOnMongoid
       end
 
       def sanitize_sql_for_named_any(tag)
-        if ActsAsTaggableOn.strict_case_match
+        if ActsAsTaggableOnMongoid.strict_case_match
           sanitize_sql(["name = #{binary}?", as_8bit_ascii(tag)])
         else
           sanitize_sql(['LOWER(name) = LOWER(?)', as_8bit_ascii(unicode_downcase(tag))])
