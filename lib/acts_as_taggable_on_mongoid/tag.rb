@@ -19,7 +19,7 @@ module ActsAsTaggableOnMongoid
     ### VALIDATIONS:
 
     validates_presence_of :name
-    validates_uniqueness_of :name, if: :validates_name_uniqueness?, case_sensitive: true
+    #validates_uniqueness_of :name, if: :validates_name_uniqueness?, case_sensitive: true
     validates_length_of :name, maximum: 255
 
     # monkey patch this method if don't need name uniqueness validation
@@ -99,11 +99,13 @@ module ActsAsTaggableOnMongoid
         begin
           tries ||= 3
           comparable_tag_name = comparable_name(tag_name)
-          existing_tag = existing_tags.find { |tag| comparable_name(tag.name) == comparable_tag_name }
+          existing_tag = existing_tags.to_a.find {
+              |tag| comparable_name(tag.name) == comparable_tag_name
+          }
           existing_tag || create(name: tag_name)
-        rescue ActiveRecord::RecordNotUnique
-          if (tries -= 1).positive?
-            ActiveRecord::Base.connection.execute 'ROLLBACK'
+        rescue Mongo::Error::OperationFailure => e
+          if e.code==11000 && (tries -= 1).positive? #code 11000 is E11000 duplicate key error
+            #ActiveRecord::Base.connection.execute 'ROLLBACK'
             existing_tags = named_any(list)
             retry
           end

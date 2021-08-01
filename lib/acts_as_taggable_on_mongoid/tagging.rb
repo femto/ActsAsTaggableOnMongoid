@@ -8,8 +8,6 @@ module ActsAsTaggableOnMongoid
     belongs_to :tag
 
     field name, type: String #cache version of tag_name
-    belongs_to :taggable, polymorphic: true
-    belongs_to :tagger, polymorphic: true
     field :context, type: String
     field :tenant, type: String
 
@@ -29,7 +27,7 @@ module ActsAsTaggableOnMongoid
 
     index({:taggable_id=>1}, {name: "index_taggings_on_taggable_id"})
     index({:taggable_type=>1}, {name: "index_taggings_on_taggable_type"})
-    index({:tagger_id=>1,:tagger_type=>1}, {name: "index_taggings_on_tag_id"})
+    index({:tagger_id=>1,:tagger_type=>1}, {name: "index_taggings_on_tagger_id_and_tagger_type"})
     index({:tagger_id=>1}, {name: "index_taggings_on_tagger_id"})
     index({:tenant=>1}, {name: "index_taggings_on_tenant"})
 

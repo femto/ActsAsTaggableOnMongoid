@@ -79,8 +79,8 @@ module ActsAsTaggableOnMongoid::Taggable
             private
             def dirtify_tag_list(tagging)
               #puts "dirtify_tag_list " + tagging
-              #attribute_will_change! tagging.context.singularize+"_list"
-              raise "dirtify_tag_list " + tagging
+              attribute_will_change! tagging.context.singularize+"_list"
+              #raise "dirtify_tag_list " + tagging
             end
           RUBY
         end
@@ -203,12 +203,13 @@ module ActsAsTaggableOnMongoid::Taggable
     ##
     # Returns all tags that are not owned of a given context
     def tags_on(context)
-      scope = taggings.where(context:context,tagger_id:nil);
+      _taggings = taggings.where(context:context,tagger_id:nil);
       # when preserving tag order, return tags in created order
       # if we added the order to the association this would always apply
-      scope = scope.order(:id) if self.class.preserve_tag_order?
+      _taggings = _taggings.order(:id) if self.class.preserve_tag_order?
       #scope = scope.to_a
-      scope
+      result = _taggings.map(&:tag).flatten
+      result
     end
 
     def set_tag_list_on(context, new_list)
