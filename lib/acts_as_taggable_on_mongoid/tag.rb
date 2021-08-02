@@ -49,7 +49,7 @@ module ActsAsTaggableOnMongoid
         if ActsAsTaggableOnMongoid.strict_case_match
           sum.or(name:tag)
         else
-          sum.or(name:unicode_downcase(tag))
+          sum.or(name:/#{unicode_downcase(tag)}/i)
         end
 
       end

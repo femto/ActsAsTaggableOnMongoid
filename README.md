@@ -104,6 +104,12 @@ rake acts_as_taggable_on_engine:tag_names:collate_bin
 See the Configuration section for more details, and a general note valid for older
 version of the gem.
 
+####For mongoid index creation
+puts this in your rake task or initialize file
+```
+ActsAsTaggableOnMongoid::Tag.create_indexes
+ActsAsTaggableOnMongoid::Tagging.create_indexes
+```
 
 ## Usage
 

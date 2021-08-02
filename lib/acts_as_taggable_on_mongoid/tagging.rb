@@ -7,7 +7,7 @@ module ActsAsTaggableOnMongoid
 
     belongs_to :tag
 
-    field name, type: String #cache version of tag_name
+    field :name, type: String #cache version of tag_name
     field :context, type: String
     field :tenant, type: String
 
