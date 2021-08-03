@@ -7,10 +7,10 @@ module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
   def self.build(taggable_model, tag_model, tagging_model, tag_list, options)
     if options[:exclude].present?
       ExcludeTagsQuery.new(taggable_model, tag_model, tagging_model, tag_list, options).build
-    elsif options[:any].present?
-      AnyTagsQuery.new(taggable_model, tag_model, tagging_model, tag_list, options).build
-    else
+    elsif options[:all].present?
       AllTagsQuery.new(taggable_model, tag_model, tagging_model, tag_list, options).build
+    else
+      AnyTagsQuery.new(taggable_model, tag_model, tagging_model, tag_list, options).build
     end
   end
 end

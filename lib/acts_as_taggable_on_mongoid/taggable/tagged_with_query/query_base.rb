@@ -13,15 +13,15 @@ module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
     attr_reader :taggable_model, :tag_model, :tagging_model, :tag_list, :options
 
     def taggable_arel_table
-      @taggable_arel_table ||= taggable_model.arel_table
+      @taggable_arel_table ||= taggable_model
     end
 
     def tag_arel_table
-      @tag_arel_table ||= tag_model.arel_table
+      @tag_arel_table ||= tag_model
     end
 
     def tagging_arel_table
-      @tagging_arel_table ||=tagging_model.arel_table
+      @tagging_arel_table ||=tagging_model
     end
 
     def tag_match_type(tag)

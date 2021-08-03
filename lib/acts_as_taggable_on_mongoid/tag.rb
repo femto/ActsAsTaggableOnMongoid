@@ -19,7 +19,7 @@ module ActsAsTaggableOnMongoid
     ### VALIDATIONS:
 
     validates_presence_of :name
-    #validates_uniqueness_of :name, if: :validates_name_uniqueness?, case_sensitive: true
+    validates_uniqueness_of :name, if: :validates_name_uniqueness?, case_sensitive: true
     validates_length_of :name, maximum: 255
 
     # monkey patch this method if don't need name uniqueness validation
@@ -49,7 +49,7 @@ module ActsAsTaggableOnMongoid
         if ActsAsTaggableOnMongoid.strict_case_match
           sum.or(name:tag)
         else
-          sum.or(name:/#{unicode_downcase(tag)}/i)
+          sum.or(name:/^#{unicode_downcase(tag)}$/i)
         end
 
       end

@@ -1,11 +1,12 @@
 module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
   class AllTagsQuery < QueryBase
     def build
-      taggable_model.joins(each_tag_in_list)
-                    .group(by_taggable)
-                    .having(tags_that_matches_count)
-                    .order(order_conditions)
-                    .readonly(false)
+
+      taggables = ActsAsTaggableOnMongoid::Tagging.in(name:tag_list).where(taggable_type:taggable_model).map(&:taggable).uniq
+      taggables = taggables.select {|x| x.tag_list.size >= tag_list.size}
+      taggables = taggables.sort_by {|x| -x.tag_list.size} if options[:order_by_matching_tag_count]
+      taggables = taggables.select {|x| x.tag_list.size == tag_list.size}          if options[:match_all]
+      taggables
     end
 
     private
@@ -14,10 +15,11 @@ module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
       arel_join = taggable_arel_table
 
       tag_list.each do |tag|
-        tagging_alias = tagging_arel_table.alias(tagging_alias(tag))
+        #tagging_alias = tagging_arel_table.alias(tagging_alias(tag))
+        cond = on_conditions(tag, tagging_arel_table)
         arel_join = arel_join
                       .join(tagging_alias)
-                      .on(on_conditions(tag, tagging_alias))
+                      .on(on_conditions(tag, tagging_arel_table))
       end
 
       if options[:match_all].present?
@@ -104,7 +106,9 @@ module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
     end
 
     def tagging_alias(tag)
-      alias_base_name = taggable_model.base_class.name.downcase
+      #alias_base_name = taggable_model.base_class.name.downcase
+      #todo: how do we find the base_class of a taggable_model in mongoid?
+      alias_base_name = taggable_model.name.downcase #just use the taggable_model name itself
       adjust_taggings_alias("#{alias_base_name[0..11]}_taggings_#{ActsAsTaggableOnMongoid::Utils.sha_prefix(tag)}")
     end
   end

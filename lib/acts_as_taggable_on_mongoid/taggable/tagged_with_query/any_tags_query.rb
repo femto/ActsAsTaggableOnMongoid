@@ -1,10 +1,10 @@
 module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
   class AnyTagsQuery < QueryBase
     def build
-      taggable_model.select(all_fields)
-                    .where(model_has_at_least_one_tag)
-                    .order(Arel.sql(order_conditions))
-                    .readonly(false)
+      taggables = ActsAsTaggableOnMongoid::Tagging.in(name:tag_list).where(taggable_type:taggable_model).map(&:taggable).uniq
+      taggables = taggables.sort_by {|x| -x.tag_list.size} if options[:order_by_matching_tag_count]
+      taggables = taggables.select {|x| x.tag_list.size == tag_list.size}          if options[:match_all]
+      taggables
     end
 
     private

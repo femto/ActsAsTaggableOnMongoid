@@ -118,7 +118,7 @@ module ActsAsTaggableOnMongoid::Taggable
       #   User.tagged_with(["awesome", "cool"], :owned_by => foo ) # Users that are tagged with just awesome and cool by 'foo'
       #   User.tagged_with(["awesome", "cool"], :owned_by => foo, :start_at => Date.today ) # Users that are tagged with just awesome, cool by 'foo' and starting today
       def tagged_with(tags, options = {})
-        tag_list = ActsAsTaggableOn.default_parser.new(tags).parse
+        tag_list = ActsAsTaggableOnMongoid.default_parser.new(tags).parse
         options = options.dup
 
         return none if tag_list.empty?
@@ -274,7 +274,7 @@ module ActsAsTaggableOnMongoid::Taggable
 
             # Order the array of tag objects to match the tag list
             new_tags = tags.map do |t|
-              new_tags.find { |n| n.name.downcase == t.name.downcase }
+              new_tags.to_a.find { |n| n.name.downcase == t.name.downcase }
             end.compact
           end
         else
@@ -285,7 +285,7 @@ module ActsAsTaggableOnMongoid::Taggable
 
         # Destroy old taggings:
         if old_tags.present?
-          taggings.not_owned.by_context(context).where(tag_id: old_tags).destroy_all
+          taggings.not_owned.by_context(context).in(tag_id: old_tags).destroy_all
         end
 
         # Create new taggings:

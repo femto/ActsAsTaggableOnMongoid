@@ -109,7 +109,7 @@ module ActsAsTaggableOnMongoid::Taggable
               new_tags |= owned_tags.from(index) & shared_tags
 
               # Order the array of tag objects to match the tag list
-              new_tags = tags.map { |t| new_tags.find { |n| n.name.downcase == t.name.downcase } }.compact
+              new_tags = tags.map { |t| new_tags.to_a.find { |n| n.name.downcase == t.name.downcase } }.compact
             end
           else
             # Delete discarded tags and create new tags
