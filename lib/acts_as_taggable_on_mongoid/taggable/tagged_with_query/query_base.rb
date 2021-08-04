@@ -8,6 +8,12 @@ module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
       @options        = options
     end
 
+    def base_computed_taggable
+      taggings = ActsAsTaggableOnMongoid::Tagging.in(name:tag_list).where(taggable_type:taggable_model)
+      taggings = taggings.where(context: options[:on]) if  options[:on]
+      taggable = taggings.map(&:taggable).uniq
+    end
+
     private
 
     attr_reader :taggable_model, :tag_model, :tagging_model, :tag_list, :options

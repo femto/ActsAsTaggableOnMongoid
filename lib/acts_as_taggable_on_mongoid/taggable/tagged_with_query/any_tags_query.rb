@@ -1,7 +1,7 @@
 module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
   class AnyTagsQuery < QueryBase
     def build
-      taggables = ActsAsTaggableOnMongoid::Tagging.in(name:tag_list).where(taggable_type:taggable_model).map(&:taggable).uniq
+      taggables = base_computed_taggable
       taggables = taggables.sort_by {|x| -x.tag_list.size} if options[:order_by_matching_tag_count]
       taggables = taggables.select {|x| x.tag_list.size == tag_list.size}          if options[:match_all]
       taggables

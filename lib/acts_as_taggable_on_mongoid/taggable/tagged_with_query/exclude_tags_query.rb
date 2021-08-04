@@ -1,10 +1,11 @@
 module ActsAsTaggableOnMongoid::Taggable::TaggedWithQuery
   class ExcludeTagsQuery < QueryBase
     def build
-      taggable_model.joins(owning_to_tagger)
-                    .where(tags_not_in_list)
-                    .having(tags_that_matches_count)
-                    .readonly(false)
+      raise "it's hard to implement not in in mongoid"
+      taggables = ActsAsTaggableOnMongoid::Tagging.not.in(name:tag_list).where(taggable_type:taggable_model).map(&:taggable).uniq
+      taggables = taggables.sort_by {|x| -x.tag_list.size} if options[:order_by_matching_tag_count]
+      taggables = taggables.select {|x| x.tag_list.size == tag_list.size}          if options[:match_all]
+      taggables
     end
 
     private
