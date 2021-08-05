@@ -42,7 +42,7 @@ bde
 [![Code Climate](https://codeclimate.com/github/mbleigh/acts-as-taggable-on.svg)](https://codeclimate.com/github/mbleigh/acts-as-taggable-on)
 [![Inline docs](http://inch-ci.org/github/mbleigh/acts-as-taggable-on.svg)](http://inch-ci.org/github/mbleigh/acts-as-taggable-on)
 [![Security](https://hakiri.io/github/mbleigh/acts-as-taggable-on/master.svg)](https://hakiri.io/github/mbleigh/acts-as-taggable-on/master)
-[![Build Status][Build Status Image]][Build Status]
+[![Build Status][Build Status Image][Build Status]]
 This plugin was originally based on Acts as Taggable on Steroids by Jonathan Viney.
 It has evolved substantially since that point, but all credit goes to him for the
 initial tagging functionality that so many people have used.
